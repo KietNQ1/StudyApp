@@ -11,7 +11,7 @@ namespace myapp.Models
         public int MessageId { get; set; }
 
         [ForeignKey("MessageId")]
-        public required ChatMessage ChatMessage { get; set; }
+        public ChatMessage? ChatMessage { get; set; } // Made nullable
 
         [Required]
         public int DocumentId { get; set; }

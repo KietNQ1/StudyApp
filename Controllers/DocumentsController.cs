@@ -8,24 +8,25 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Hangfire; // Add this using directive
+using Microsoft.AspNetCore.Authorization;
 
 namespace myapp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DocumentsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly GoogleCloudStorageService _gcsService;
-        private readonly DocumentProcessorService _docAIService;
-        private readonly VertexAIService _vertexAIService;
+        private readonly IBackgroundJobClient _backgroundJobClient;
 
-        public DocumentsController(ApplicationDbContext context, GoogleCloudStorageService gcsService, DocumentProcessorService docAIService, VertexAIService vertexAIService)
+        public DocumentsController(ApplicationDbContext context, GoogleCloudStorageService gcsService, IBackgroundJobClient backgroundJobClient)
         {
             _context = context;
             _gcsService = gcsService;
-            _docAIService = docAIService;
-            _vertexAIService = vertexAIService;
+            _backgroundJobClient = backgroundJobClient;
         }
 
         // GET: api/Documents
@@ -75,6 +76,10 @@ namespace myapp.Controllers
                 return BadRequest("Invalid Course ID.");
             }
 
+            // 1. Upload file to GCS
+            var fileUrl = await _gcsService.UploadFileAsync(file, "documents");
+
+            // 2. Create Document record
             var document = new Document
             {
                 CourseId = courseId,
@@ -82,74 +87,25 @@ namespace myapp.Controllers
                 FileType = file.ContentType,
                 FileSize = file.Length,
                 UploadedAt = DateTime.UtcNow,
-                ProcessingStatus = "pending",
-                FileUrl = string.Empty // Initialize FileUrl to avoid CS9035, will be updated after upload
+                ProcessingStatus = "processing", // Set status to processing
+                FileUrl = fileUrl
             };
 
             _context.Documents.Add(document);
             await _context.SaveChangesAsync();
-
-            try
+            
+            // 3. Enqueue the background job for processing
+            byte[] fileContent;
+            using (var memoryStream = new MemoryStream())
             {
-                // Upload to GCS
-                var fileUrl = await _gcsService.UploadFileAsync(file, "documents"); // 'documents' is the folder in GCS
-                document.FileUrl = fileUrl;
-
-                // Read file content for Document AI processing
-                byte[] fileContent;
-                using (var memoryStream = new MemoryStream())
-                {
-                    await file.CopyToAsync(memoryStream);
-                    fileContent = memoryStream.ToArray();
-                }
-
-                // Extract text using Document AI, passing the correct MimeType
-                var extractedText = await _docAIService.ExtractTextAsync(fileContent, file.ContentType);
-                document.ExtractedText = extractedText;
-                document.ProcessingStatus = "completed";
-                document.ProcessedAt = DateTime.UtcNow;
-                document.PageCount = 1; // Simplified, Document AI can provide page count
-
-                // Process text into chunks and generate embeddings
-                if (!string.IsNullOrEmpty(extractedText))
-                {
-                    const int chunkSize = 1000; // Example chunk size
-                    var chunks = new List<string>();
-                    for (int i = 0; i < extractedText.Length; i += chunkSize)
-                    {
-                        chunks.Add(extractedText.Substring(i, Math.Min(chunkSize, extractedText.Length - i)));
-                    }
-
-                    for (int i = 0; i < chunks.Count; i++)
-                    {
-                        var chunkContent = chunks[i];
-                        var embedding = await _vertexAIService.GenerateEmbeddingAsync(chunkContent);
-
-                        _context.DocumentChunks.Add(new DocumentChunk
-                        {
-                            DocumentId = document.Id,
-                            Content = chunkContent,
-                            ChunkIndex = i,
-                            PageNumber = 1, // Default to page 1 for simplicity and to avoid division by zero
-                            EmbeddingVector = embedding,
-                            TokenCount = chunkContent.Length / 4, // Estimate tokens
-                            Metadata = "{}"
-                        });
-                    }
-                    await _context.SaveChangesAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                document.ProcessingStatus = "failed";
-                // Log the exception (e.g., using Serilog)
-                Console.WriteLine($"Error processing document: {ex.Message}");
-                return StatusCode(500, $"Error uploading or processing document: {ex.Message}");
+                await file.CopyToAsync(memoryStream);
+                fileContent = memoryStream.ToArray();
             }
 
-            await _context.SaveChangesAsync(); // Save final document status and chunks
+            _backgroundJobClient.Enqueue<IBackgroundJobService>(service => 
+                service.ProcessDocumentAsync(document.Id, fileContent, file.ContentType));
 
-            return CreatedAtAction(nameof(GetDocument), new { id = document.Id }, document);
+            return AcceptedAtAction(nameof(GetDocument), new { id = document.Id }, document);
         }
 
         // PUT: api/Documents/5

@@ -30,6 +30,7 @@ Mục tiêu là tạo ra một ứng dụng giúp cá nhân hóa và nâng cao h
     - Models: `User`, `StudentProfile`
     - Database: Thiết lập DbContext và tạo bảng `Users`, `StudentProfiles` qua EF Core Migrations.
     - API: `UsersController` với các endpoint cơ bản (`GET all`, `GET by ID`, `POST`).
+    - **Authentication & Authorization**: Triển khai JWT Bearer authentication, tạo `AuthController` để đăng ký/đăng nhập, và bảo vệ các endpoints bằng `[Authorize]`.
 
 - **Module Quản lý Tài liệu & Giáo trình**:
     - Models: `Course`, `Document`, `DocumentChunk`, `Topic`.
@@ -42,6 +43,7 @@ Mục tiêu là tạo ra một ứng dụng giúp cá nhân hóa và nâng cao h
     - Database: Cập nhật DbContext và tạo bảng tương ứng qua EF Core Migrations.
     - API: `ChatSessionsController` và `ChatMessagesController` với các endpoint CRUD cơ bản.
     - **AI Chat (RAG)**: `ChatMessagesController` được cập nhật để tích hợp `VertexAIService`, thực hiện vector search trên `DocumentChunk` để lấy ngữ cảnh liên quan và tạo câu trả lời.
+    - **Real-time Chat (SignalR)**: Tích hợp SignalR để đẩy tin nhắn AI đến client trong thời gian thực.
 
 - **Module Quiz & Đánh giá**:
     - Models: `Question`, `QuestionOption`, `Quiz`, `QuizQuestion`, `QuizAttempt`, `QuizAnswer`.
@@ -92,6 +94,22 @@ Mục tiêu là tạo ra một ứng dụng giúp cá nhân hóa và nâng cao h
     *   **[COMPLETED]** Tạo Service để tạo Embeddings (`VertexAIService` được mở rộng với `GenerateEmbeddingAsync`).
     *   **[COMPLETED]** Cập nhật `DocumentsController` để chia văn bản thành chunks và tạo embeddings khi upload tài liệu.
     *   **[COMPLETED]** Triển khai Vector Search (RAG) trong `ChatMessagesController` để sử dụng `EmbeddingVector` tìm kiếm ngữ nghĩa.
+5.  **[COMPLETED]** **Authentication & Authorization**:
+    *   **[COMPLETED]** Cài đặt `Microsoft.AspNetCore.Authentication.JwtBearer`.
+    *   **[COMPLETED]** Thêm cấu hình JWT vào `appsettings.json` và User Secrets.
+    *   **[COMPLETED]** Cấu hình Authentication trong `Program.cs`.
+    *   **[COMPLETED]** Tạo `AuthController` với các endpoint `Register` và `Login`.
+    *   **[COMPLETED]** Bảo vệ `CoursesController` bằng attribute `[Authorize]`.
+6.  **[COMPLETED]** **Background Jobs**:
+    *   **[COMPLETED]** Cài đặt `Hangfire.AspNetCore` và `Hangfire.MemoryStorage`.
+    *   **[COMPLETED]** Cấu hình Hangfire trong `Program.cs`.
+    *   **[COMPLETED]** Tạo `IBackgroundJobService` và `BackgroundJobService`.
+    *   **[COMPLETED]** Refactor `DocumentsController` để sử dụng Hangfire cho việc xử lý tài liệu.
+7.  **[COMPLETED]** **Real-time Features (SignalR)**:
+    *   **[COMPLETED]** Tạo `ChatHub.cs`.
+    *   **[COMPLETED]** Cấu hình SignalR trong `Program.cs`.
+    *   **[COMPLETED]** Refactor `ChatMessagesController` để gửi tin nhắn real-time.
+    *   **[COMPLETED]** Cập nhật frontend React để kết nối và nhận tin nhắn real-time.
 
 ---
 
@@ -101,7 +119,6 @@ Mục tiêu là tạo ra một ứng dụng giúp cá nhân hóa và nâng cao h
 
 **Các bước thực hiện:**
 
-1.  **[PENDING]** **Authentication & Authorization**: Triển khai JWT Bearer authentication và role-based authorization.
-2.  **[PENDING]** **Background Jobs**: Tích hợp Hangfire để xử lý các tác vụ nền như xử lý tài liệu (chia chunks, tạo embeddings), gửi nhắc nhở định kỳ.
-3.  **[PENDING]** **Real-time Features (SignalR)**: Triển khai SignalR cho các tính năng chat real-time hoặc thông báo tức thì.
-4.  **[PENDING]** **Cải thiện Prompts AI**: Tối ưu hóa các prompts được sử dụng trong `VertexAIService` để có kết quả tốt hơn cho chat và quiz generation
+1.  **[PENDING]** **Cải thiện Prompts AI**: Tối ưu hóa các prompts được sử dụng trong `VertexAIService` để có kết quả tốt hơn cho chat và quiz generation.
+2.  **[PENDING]** **Bảo mật các Controllers khác**: Thêm attribute `[Authorize]` vào tất cả các controllers cần bảo vệ.
+3.  **[PENDING]** **Xử lý Quyền (Authorization)**: Cập nhật các endpoints để chỉ cho phép người dùng truy cập hoặc chỉnh sửa dữ liệu của chính họ.

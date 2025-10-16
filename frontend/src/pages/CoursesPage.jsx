@@ -1,29 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import AddCourseForm from '../components/AddCourseForm'; // Import the new component
+import AddCourseForm from '../components/AddCourseForm';
+import { authFetch } from '../utils/authFetch'; // Import the new fetch utility
 
 function CoursesPage() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchCourses = () => {
+  const fetchCourses = async () => {
     setLoading(true);
-    fetch('/api/Courses')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setCourses(data);
-        setLoading(false);
-      })
-      .catch(error => {
-        setError(error.message);
-        setLoading(false);
-      });
+    try {
+      const data = await authFetch('/api/Courses');
+      setCourses(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -31,7 +25,6 @@ function CoursesPage() {
   }, []);
 
   const handleCourseAdded = (newCourse) => {
-    // Add the new course to the list without refetching
     setCourses(prevCourses => [newCourse, ...prevCourses]);
   };
 

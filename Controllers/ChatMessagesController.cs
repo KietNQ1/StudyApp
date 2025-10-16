@@ -7,21 +7,27 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Pgvector.EntityFrameworkCore; // For vector search with PostgreSQL
+using Microsoft.AspNetCore.SignalR;
+using myapp.Hubs;
+using Pgvector.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace myapp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // Protect all endpoints in this controller
     public class ChatMessagesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly VertexAIService _vertexAIService;
+        private readonly IHubContext<ChatHub> _hubContext;
 
-        public ChatMessagesController(ApplicationDbContext context, VertexAIService vertexAIService)
+        public ChatMessagesController(ApplicationDbContext context, VertexAIService vertexAIService, IHubContext<ChatHub> hubContext)
         {
             _context = context;
             _vertexAIService = vertexAIService;
+            _hubContext = hubContext;
         }
 
         // GET: api/ChatMessages
@@ -98,14 +104,12 @@ namespace myapp.Controllers
                                 ChunkId = chunk.Id,
                                 PageNumber = chunk.PageNumber,
                                 QuoteText = chunk.Content.Length > 200 ? chunk.Content.Substring(0, 200) + "..." : chunk.Content,
-                                RelevanceScore = 1.0, // Placeholder, actual score can be calculated
-                                ChatMessage = chatMessage // Link to the AI message, will be updated later
+                                RelevanceScore = 1.0, // Placeholder
                             });
                         }
                     }
                     else
                     {
-                        // Fallback to full extracted text if no relevant chunks found
                         documentContext = chatSession.Document.ExtractedText.Length > 4000 
                                         ? chatSession.Document.ExtractedText.Substring(0, 4000) 
                                         : chatSession.Document.ExtractedText;
@@ -135,7 +139,6 @@ namespace myapp.Controllers
                 Role = "assistant",
                 Content = aiResponseContent,
                 CreatedAt = DateTime.UtcNow,
-                // TokensUsed and ModelVersion can be populated from AI service response if available
             };
             _context.ChatMessages.Add(aiMessage);
             await _context.SaveChangesAsync();
@@ -147,6 +150,9 @@ namespace myapp.Controllers
                 _context.MessageCitations.Add(citation);
             }
             await _context.SaveChangesAsync();
+            
+            // 5. Broadcast the new AI message to all clients in the chat session group
+            await _hubContext.Clients.Group($"session-{chatSession.Id}").SendAsync("ReceiveMessage", aiMessage);
             
             // Update last message time for the session
             chatSession.LastMessageAt = DateTime.UtcNow;

@@ -7,7 +7,9 @@ import {
 import App from './App.jsx'
 import HomePage from './pages/HomePage.jsx';
 import CoursesPage from './pages/CoursesPage.jsx';
-import CourseDetailPage from './pages/CourseDetailPage.jsx'; // Import the new page
+import CourseDetailPage from './pages/CourseDetailPage.jsx';
+import ChatPage from './pages/ChatPage.jsx';
+import LoginPage from './pages/LoginPage.jsx'; // Import the new login page
 import './index.css'
 
 const router = createBrowserRouter([
@@ -24,11 +26,19 @@ const router = createBrowserRouter([
         element: <CoursesPage />,
       },
       {
-        path: "courses/:id", // Add the detail page route
+        path: "courses/:id",
         element: <CourseDetailPage />,
+      },
+      {
+        path: "chat",
+        element: <ChatPage />,
       },
     ],
   },
+  {
+    path: "/login", // Add the login page route outside the main layout
+    element: <LoginPage />,
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
