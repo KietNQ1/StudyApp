@@ -127,6 +127,7 @@ namespace myapp.Controllers
                     QuestionType = request.QuestionType,
                     QuestionText = qDto.QuestionText,
                     GeneratedByAi = true,
+                    Points = 10 // Set default points for AI-generated questions
                 };
                 _context.Questions.Add(question);
                 await _context.SaveChangesAsync();
