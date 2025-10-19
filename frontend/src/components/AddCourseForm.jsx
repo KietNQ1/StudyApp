@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { authFetch } from '../utils/authFetch'; // Import authFetch
 
 function AddCourseForm({ onCourseAdded }) {
   const [title, setTitle] = useState('');
@@ -15,25 +16,16 @@ function AddCourseForm({ onCourseAdded }) {
     const userId = 1; 
 
     try {
-      const response = await fetch('/api/Courses', {
+      const newCourse = await authFetch('/api/Courses', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId,
           title,
           description,
-          isPublic: false,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create course');
-      }
-
-      const newCourse = await response.json();
-      onCourseAdded(newCourse); // Callback to update parent component's state
+      onCourseAdded(newCourse);
       setTitle('');
       setDescription('');
     } catch (err) {

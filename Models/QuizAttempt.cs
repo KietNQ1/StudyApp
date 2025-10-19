@@ -13,13 +13,13 @@ namespace myapp.Models
         public int QuizId { get; set; }
 
         [ForeignKey("QuizId")]
-        public required Quiz Quiz { get; set; }
+        public Quiz? Quiz { get; set; } // Made nullable
 
         [Required]
         public int UserId { get; set; }
 
         [ForeignKey("UserId")]
-        public required User User { get; set; }
+        public User? User { get; set; } // Made nullable
 
         public DateTime StartedAt { get; set; } = DateTime.UtcNow;
         public DateTime? SubmittedAt { get; set; }

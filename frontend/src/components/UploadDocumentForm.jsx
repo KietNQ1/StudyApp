@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { authUploadFetch } from '../utils/authFetch'; // Import the new upload utility
 
 function UploadDocumentForm({ courseId, onDocumentUploaded }) {
   const [file, setFile] = useState(null);
@@ -25,19 +26,15 @@ function UploadDocumentForm({ courseId, onDocumentUploaded }) {
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/Documents', {
+      const newDocument = await authUploadFetch('/api/Documents', {
         method: 'POST',
-        body: formData, // No Content-Type header needed, browser will set it with boundary
+        body: formData,
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload document');
-      }
-
-      const newDocument = await response.json();
       onDocumentUploaded(newDocument);
       setTitle('');
       setFile(null);
+      // Clear the file input visually
+      e.target.reset(); 
     } catch (err) {
       setError(err.message);
     } finally {
