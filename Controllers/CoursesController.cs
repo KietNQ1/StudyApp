@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using myapp.Data;
 using myapp.Models;
+using myapp.Models.DTOs; // Add this using directive
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,9 +18,9 @@ namespace myapp.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public CoursesController(ApplicationDbContext _context)
+        public CoursesController(ApplicationDbContext context)
         {
-            this._context = _context;
+            _context = context;
         }
 
         // GET: api/Courses
@@ -36,7 +38,7 @@ namespace myapp.Controllers
                 .Include(c => c.User)
                 .Include(c => c.Documents)
                 .Include(c => c.Topics)
-                .Include(c => c.Quizzes) // Include quizzes
+                .Include(c => c.Quizzes)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (course == null)
@@ -49,14 +51,24 @@ namespace myapp.Controllers
 
         // POST: api/Courses
         [HttpPost]
-        public async Task<ActionResult<Course>> PostCourse(Course course)
+        public async Task<ActionResult<Course>> PostCourse(CreateCourseDto createCourseDto)
         {
             // Ensure the UserId is valid and exists
-            var userExists = await _context.Users.AnyAsync(u => u.Id == course.UserId);
+            var userExists = await _context.Users.AnyAsync(u => u.Id == createCourseDto.UserId);
             if (!userExists)
             {
                 return BadRequest("Invalid User ID.");
             }
+            
+            var course = new Course
+            {
+                UserId = createCourseDto.UserId,
+                Title = createCourseDto.Title,
+                Description = createCourseDto.Description,
+                IsPublic = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
             _context.Courses.Add(course);
             await _context.SaveChangesAsync();

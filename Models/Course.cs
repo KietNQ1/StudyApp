@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using myapp.Models;
 
 namespace myapp.Models
 {
@@ -13,7 +14,7 @@ namespace myapp.Models
         public int UserId { get; set; } // người tạo
 
         [ForeignKey("UserId")]
-        public User? User { get; set; } // Made nullable
+        public User? User { get; set; }
 
         [Required]
         [MaxLength(255)]
@@ -31,5 +32,6 @@ namespace myapp.Models
 
         public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
         public virtual ICollection<Topic> Topics { get; set; } = new List<Topic>();
+        public virtual ICollection<Quiz> Quizzes { get; set; } = new List<Quiz>(); // Add this line
     }
 }
