@@ -8,7 +8,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using Hangfire;
 using Hangfire.MemoryStorage;
-using myapp.Hubs;
+using myapp.Hubs; // Add this using directive
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -110,7 +110,7 @@ builder.Services.AddSignalR()
 // Configure Application Services
 builder.Services.AddTransient<IBackgroundJobService, BackgroundJobService>();
 
-// Configure Google Cloud Storage Service
+// Configure Google Cloud Services (as Singletons)
 builder.Services.AddSingleton(provider =>
 {
     var bucketName = provider.GetRequiredService<IConfiguration>()["GoogleCloudStorage:BucketName"];
@@ -121,7 +121,6 @@ builder.Services.AddSingleton(provider =>
     return new GoogleCloudStorageService(bucketName);
 });
 
-// Configure Google Document AI Service
 builder.Services.AddSingleton(provider =>
 {
     var config = provider.GetRequiredService<IConfiguration>();
@@ -136,7 +135,6 @@ builder.Services.AddSingleton(provider =>
     return new DocumentProcessorService(projectId, location, processorId);
 });
 
-// Configure Google Vertex AI Service
 builder.Services.AddSingleton<VertexAIService>();
 
 

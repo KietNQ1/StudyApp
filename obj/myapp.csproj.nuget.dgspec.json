@@ -68,10 +68,6 @@
               "target": "Package",
               "version": "[1.8.1.2, )"
             },
-            "Hangfire.SQLite": {
-              "target": "Package",
-              "version": "[1.4.2, )"
-            },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[9.0.10, )"
