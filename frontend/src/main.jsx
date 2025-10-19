@@ -9,7 +9,8 @@ import HomePage from './pages/HomePage.jsx';
 import CoursesPage from './pages/CoursesPage.jsx';
 import CourseDetailPage from './pages/CourseDetailPage.jsx';
 import ChatPage from './pages/ChatPage.jsx';
-import LoginPage from './pages/LoginPage.jsx'; // Import the new login page
+import LoginPage from './pages/LoginPage.jsx';
+import QuizPage from './pages/QuizPage.jsx'; // Import the new quiz page
 import './index.css'
 
 const router = createBrowserRouter([
@@ -30,13 +31,17 @@ const router = createBrowserRouter([
         element: <CourseDetailPage />,
       },
       {
-        path: "chat",
+        path: "chat/:sessionId",
         element: <ChatPage />,
       },
+      {
+        path: "quiz/:id", // Add the quiz page route
+        element: <QuizPage />,
+      }
     ],
   },
   {
-    path: "/login", // Add the login page route outside the main layout
+    path: "/login",
     element: <LoginPage />,
   }
 ]);

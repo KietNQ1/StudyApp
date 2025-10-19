@@ -13,7 +13,7 @@ namespace myapp.Models
         public int UserId { get; set; }
 
         [ForeignKey("UserId")]
-        public required User User { get; set; }
+        public User? User { get; set; } // Made nullable
 
         public int? CourseId { get; set; }
         [ForeignKey("CourseId")]

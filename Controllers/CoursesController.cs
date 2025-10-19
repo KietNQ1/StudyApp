@@ -11,14 +11,14 @@ namespace myapp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Protect all endpoints in this controller
+    [Authorize]
     public class CoursesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
 
-        public CoursesController(ApplicationDbContext context)
+        public CoursesController(ApplicationDbContext _context)
         {
-            _context = context;
+            this._context = _context;
         }
 
         // GET: api/Courses
@@ -36,6 +36,7 @@ namespace myapp.Controllers
                 .Include(c => c.User)
                 .Include(c => c.Documents)
                 .Include(c => c.Topics)
+                .Include(c => c.Quizzes) // Include quizzes
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (course == null)

@@ -61,6 +61,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Add HttpClientFactory
+builder.Services.AddHttpClient();
+
 // Configure DbContext with SQLite
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -97,43 +100,44 @@ builder.Services.AddHangfire(configuration => configuration
 
 builder.Services.AddHangfireServer();
 
-// Add SignalR services
-builder.Services.AddSignalR();
+// Add SignalR services and configure JSON options
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Configure Application Services
 builder.Services.AddTransient<IBackgroundJobService, BackgroundJobService>();
 
 // Configure Google Cloud Storage Service
-var gcsBucketName = builder.Configuration["GoogleCloudStorage:BucketName"];
-if (string.IsNullOrEmpty(gcsBucketName))
+builder.Services.AddSingleton(provider =>
 {
-    throw new InvalidOperationException("GoogleCloudStorage:BucketName is not configured.");
-}
-builder.Services.AddSingleton(new GoogleCloudStorageService(gcsBucketName));
+    var bucketName = provider.GetRequiredService<IConfiguration>()["GoogleCloudStorage:BucketName"];
+    if (string.IsNullOrEmpty(bucketName))
+    {
+        throw new InvalidOperationException("GoogleCloudStorage:BucketName is not configured.");
+    }
+    return new GoogleCloudStorageService(bucketName);
+});
 
 // Configure Google Document AI Service
-var docAIProjectId = builder.Configuration["GoogleDocumentAI:ProjectId"];
-var docAILocation = builder.Configuration["GoogleDocumentAI:Location"];
-var docAIProcessorId = builder.Configuration["GoogleDocumentAI:ProcessorId"];
-
-if (string.IsNullOrEmpty(docAIProjectId) || string.IsNullOrEmpty(docAILocation) || string.IsNullOrEmpty(docAIProcessorId))
+builder.Services.AddSingleton(provider =>
 {
-    throw new InvalidOperationException("GoogleDocumentAI configuration is incomplete.");
-}
-builder.Services.AddSingleton(new DocumentProcessorService(docAIProjectId, docAILocation, docAIProcessorId));
+    var config = provider.GetRequiredService<IConfiguration>();
+    var projectId = config["GoogleDocumentAI:ProjectId"];
+    var location = config["GoogleDocumentAI:Location"];
+    var processorId = config["GoogleDocumentAI:ProcessorId"];
+
+    if (string.IsNullOrEmpty(projectId) || string.IsNullOrEmpty(location) || string.IsNullOrEmpty(processorId))
+    {
+        throw new InvalidOperationException("GoogleDocumentAI configuration is incomplete.");
+    }
+    return new DocumentProcessorService(projectId, location, processorId);
+});
 
 // Configure Google Vertex AI Service
-var vertexAIProjectId = builder.Configuration["GoogleVertexAI:ProjectId"];
-var vertexAILocation = builder.Configuration["GoogleVertexAI:Location"];
-var vertexAIPublisher = builder.Configuration["GoogleVertexAI:Publisher"];
-var vertexAITextGenerationModel = builder.Configuration["GoogleVertexAI:Model"];
-var vertexAIEmbeddingModel = builder.Configuration["GoogleVertexAI:EmbeddingModel"];
-
-if (string.IsNullOrEmpty(vertexAIProjectId) || string.IsNullOrEmpty(vertexAILocation) || string.IsNullOrEmpty(vertexAIPublisher) || string.IsNullOrEmpty(vertexAITextGenerationModel) || string.IsNullOrEmpty(vertexAIEmbeddingModel))
-{
-    throw new InvalidOperationException("GoogleVertexAI configuration is incomplete.");
-}
-builder.Services.AddSingleton(new VertexAIService(vertexAIProjectId, vertexAILocation, vertexAIPublisher, vertexAITextGenerationModel, vertexAIEmbeddingModel));
+builder.Services.AddSingleton<VertexAIService>();
 
 
 var app = builder.Build();
