@@ -12,13 +12,13 @@ namespace myapp.Models
         public int AttemptId { get; set; }
 
         [ForeignKey("AttemptId")]
-        public required QuizAttempt QuizAttempt { get; set; }
+        public QuizAttempt? QuizAttempt { get; set; } // Made nullable
 
         [Required]
         public int QuestionId { get; set; }
 
         [ForeignKey("QuestionId")]
-        public required Question Question { get; set; }
+        public Question? Question { get; set; } // Made nullable
 
         public int? SelectedOptionId { get; set; }
         [ForeignKey("SelectedOptionId")]
