@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using myapp.Data;
@@ -10,6 +11,7 @@ namespace myapp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // Protect this controller
     public class UserStreaksController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

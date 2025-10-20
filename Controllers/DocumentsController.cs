@@ -8,14 +8,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Hangfire; // Add this using directive
-using Microsoft.AspNetCore.Authorization;
+using Hangfire;
+using Microsoft.AspNetCore.Authorization; // Add this
 
 namespace myapp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize] // Protect this controller
     public class DocumentsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -29,6 +29,7 @@ namespace myapp.Controllers
             _backgroundJobClient = backgroundJobClient;
         }
 
+        // ... (rest of the controller remains the same)
         // GET: api/Documents
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Document>>> GetDocuments()

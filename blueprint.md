@@ -37,6 +37,7 @@ Mục tiêu là tạo ra một ứng dụng giúp cá nhân hóa và nâng cao h
     - Database: Cập nhật DbContext và tạo bảng `Courses`, `Documents`, `DocumentChunks`, `Topics` qua EF Core Migrations, bao gồm cột `EmbeddingVector` cho `DocumentChunk`.
     - API: `CoursesController` và `DocumentsController` với các endpoint CRUD cơ bản.
     - **Upload Tài liệu**: `DocumentsController` được cập nhật để tải file lên GCS, gọi Document AI để trích xuất văn bản, chia thành chunks, tạo embeddings và lưu vào database.
+    - **Authorization**: `CoursesController` được cập nhật để chỉ cho phép người dùng truy cập và chỉnh sửa dữ liệu của chính họ.
 
 - **Module AI Chat Assistant**:
     - Models: `ChatSession`, `ChatMessage`, `MessageCitation`.
@@ -110,6 +111,10 @@ Mục tiêu là tạo ra một ứng dụng giúp cá nhân hóa và nâng cao h
     *   **[COMPLETED]** Cấu hình SignalR trong `Program.cs`.
     *   **[COMPLETED]** Refactor `ChatMessagesController` để gửi tin nhắn real-time.
     *   **[COMPLETED]** Cập nhật frontend React để kết nối và nhận tin nhắn real-time.
+8.  **[COMPLETED]** **Bảo mật các Controllers khác**:
+    *   **[COMPLETED]** Thêm attribute `[Authorize]` vào tất cả các controllers cần bảo vệ.
+9.  **[COMPLETED]** **Xử lý Quyền (Authorization)**:
+    *   **[COMPLETED]** Cập nhật `CoursesController` để chỉ cho phép người dùng truy cập và chỉnh sửa dữ liệu của chính họ.
 
 ---
 
@@ -120,5 +125,4 @@ Mục tiêu là tạo ra một ứng dụng giúp cá nhân hóa và nâng cao h
 **Các bước thực hiện:**
 
 1.  **[PENDING]** **Cải thiện Prompts AI**: Tối ưu hóa các prompts được sử dụng trong `VertexAIService` để có kết quả tốt hơn cho chat và quiz generation.
-2.  **[PENDING]** **Bảo mật các Controllers khác**: Thêm attribute `[Authorize]` vào tất cả các controllers cần bảo vệ.
-3.  **[PENDING]** **Xử lý Quyền (Authorization)**: Cập nhật các endpoints để chỉ cho phép người dùng truy cập hoặc chỉnh sửa dữ liệu của chính họ.
+2.  **[PENDING]** **Xử lý Quyền (Authorization) cho các Controllers khác**: Áp dụng logic tương tự `CoursesController` cho các controllers còn lại để đảm bảo người dùng chỉ có thể truy cập dữ liệu của chính họ.

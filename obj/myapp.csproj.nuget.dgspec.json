@@ -48,6 +48,10 @@
               "target": "Package",
               "version": "[4.0.3, )"
             },
+            "Google.Apis.Auth": {
+              "target": "Package",
+              "version": "[1.72.0, )"
+            },
             "Google.Cloud.AIPlatform.V1": {
               "target": "Package",
               "version": "[3.49.0, )"

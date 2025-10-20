@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -6,7 +7,7 @@ function LoginPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleCredentialLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -25,9 +26,8 @@ function LoginPage() {
       }
 
       const token = await response.text();
-      localStorage.setItem('jwt_token', token); // Store the token
+      localStorage.setItem('jwt_token', token);
       
-      // Redirect to home or dashboard after successful login
       window.location.href = '/'; 
 
     } catch (err) {
@@ -37,11 +37,59 @@ function LoginPage() {
     }
   };
 
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError(null);
+    try {
+        const response = await fetch('/api/Auth/google-login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ credential: credentialResponse.credential }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Google login failed.');
+        }
+
+        const token = await response.text();
+        localStorage.setItem('jwt_token', token);
+        window.location.href = '/';
+
+    } catch (err) {
+        setError(err.message);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const handleGoogleLoginError = () => {
+    setError('Google login failed. Please try again.');
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center">Login to your account</h2>
-        <form className="space-y-6" onSubmit={handleLogin}>
+        
+        <div className="flex justify-center">
+            <GoogleLogin
+                onSuccess={handleGoogleLoginSuccess}
+                onError={handleGoogleLoginError}
+            />
+        </div>
+
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
+        <form className="space-y-6" onSubmit={handleCredentialLogin}>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email address

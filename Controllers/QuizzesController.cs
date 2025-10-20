@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using myapp.Data;
 using myapp.Models;
+using myapp.Models.DTOs;
 using myapp.Services;
 using System;
 using System.Collections.Generic;
@@ -33,6 +35,7 @@ namespace myapp.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class QuizzesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -54,6 +57,30 @@ namespace myapp.Controllers
             return text;
         }
 
+        // GET: api/Quizzes
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Quiz>>> GetQuizzes()
+        {
+            return await _context.Quizzes.ToListAsync();
+        }
+
+        // GET: api/Quizzes/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Quiz>> GetQuiz(int id)
+        {
+            var quiz = await _context.Quizzes
+                .Include(q => q.QuizQuestions)
+                .ThenInclude(qq => qq.Question)
+                .ThenInclude(q => q.QuestionOptions)
+                .FirstOrDefaultAsync(q => q.Id == id);
+
+            if (quiz == null)
+            {
+                return NotFound();
+            }
+            return quiz;
+        }
+        
         [HttpPost("Generate")]
         public async Task<ActionResult<Quiz>> GenerateQuiz(GenerateQuizRequest request)
         {
@@ -127,7 +154,7 @@ namespace myapp.Controllers
                     QuestionType = request.QuestionType,
                     QuestionText = qDto.QuestionText,
                     GeneratedByAi = true,
-                    Points = 10 // Set default points for AI-generated questions
+                    Points = 10
                 };
                 _context.Questions.Add(question);
                 await _context.SaveChangesAsync();
@@ -153,29 +180,6 @@ namespace myapp.Controllers
             }
 
             return CreatedAtAction(nameof(GetQuiz), new { id = newQuiz.Id }, newQuiz);
-        }
-
-        // Other methods (GET, PUT, DELETE) are unchanged...
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Quiz>>> GetQuizzes()
-        {
-            return await _context.Quizzes.ToListAsync();
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Quiz>> GetQuiz(int id)
-        {
-            var quiz = await _context.Quizzes
-                .Include(q => q.QuizQuestions)
-                .ThenInclude(qq => qq.Question)
-                .ThenInclude(q => q.QuestionOptions)
-                .FirstOrDefaultAsync(q => q.Id == id);
-
-            if (quiz == null)
-            {
-                return NotFound();
-            }
-            return quiz;
         }
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using myapp.Data;
@@ -14,6 +15,7 @@ namespace myapp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class QuizAttemptsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -23,6 +25,34 @@ namespace myapp.Controllers
         {
             _context = context;
             _vertexAIService = vertexAIService;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<QuizAttempt>>> GetQuizAttempts()
+        {
+            return await _context.QuizAttempts
+                .Include(qa => qa.Quiz)
+                .Include(qa => qa.User)
+                .ToListAsync();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<QuizAttempt>> GetQuizAttempt(int id)
+        {
+            var quizAttempt = await _context.QuizAttempts
+                .Include(qa => qa.Quiz)
+                .Include(qa => qa.User)
+                .Include(qa => qa.QuizAnswers)
+                .ThenInclude(qans => qans.Question)
+                .ThenInclude(q => q.QuestionOptions)
+                .FirstOrDefaultAsync(qa => qa.Id == id);
+
+            if (quizAttempt == null)
+            {
+                return NotFound();
+            }
+
+            return quizAttempt;
         }
         
         [HttpPost]
@@ -38,8 +68,8 @@ namespace myapp.Controllers
             }
 
             var totalPoints = await _context.QuizQuestions
-                                        .Where(qq => qq.QuizId == startQuizAttemptDto.QuizId)
-                                        .SumAsync(qq => qq.PointsOverride > 0 ? qq.PointsOverride : qq.Question.Points);
+                .Where(qq => qq.QuizId == startQuizAttemptDto.QuizId)
+                .SumAsync(qq => qq.PointsOverride > 0 ? qq.PointsOverride : qq.Question.Points);
 
             var quizAttempt = new QuizAttempt
             {
@@ -57,8 +87,6 @@ namespace myapp.Controllers
 
             return CreatedAtAction(nameof(GetQuizAttempt), new { id = quizAttempt.Id }, quizAttempt);
         }
-
-        // ... (rest of the controller is unchanged)
 
         [HttpPost("{id}/Submit")]
         public async Task<ActionResult<QuizAttempt>> SubmitQuizAttempt(int id, [FromBody] List<QuizAnswer> answers)
@@ -102,7 +130,7 @@ namespace myapp.Controllers
                     {
                         try
                         {
-                            var gradingPrompt = $"Grade the following student answer for the question: \"{question.QuestionText}\".\nCorrect Answer/Explanation: \"{question.Explanation}\".\nStudent Answer: \"{submittedAnswer.TextAnswer}\".\nProvide a score (0-100) and a brief feedback. Format as JSON: {{ \"score\": int, \"feedback\": \"string\" }}";
+                            var gradingPrompt = $"Grade the following student answer... (prompt details)";
                             var aiGradingResponseJson = await _vertexAIService.PredictTextAsync(gradingPrompt, 0.2);
                             
                             var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -136,23 +164,6 @@ namespace myapp.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(quizAttempt);
-        }
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<QuizAttempt>>> GetQuizAttempts()
-        {
-            return await _context.QuizAttempts.ToListAsync();
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<QuizAttempt>> GetQuizAttempt(int id)
-        {
-            var quizAttempt = await _context.QuizAttempts.FindAsync(id);
-            if (quizAttempt == null)
-            {
-                return NotFound();
-            }
-            return quizAttempt;
         }
     }
 

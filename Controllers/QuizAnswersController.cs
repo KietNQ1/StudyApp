@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using myapp.Data;
@@ -10,6 +11,7 @@ namespace myapp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // Protect this controller
     public class QuizAnswersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -65,7 +67,7 @@ namespace myapp.Controllers
                 return BadRequest("Invalid Question Option ID.");
             }
 
-            quizAnswer.AnsweredAt = DateTime.UtcNow;
+            quizAnswer.AnsweredAt = System.DateTime.UtcNow;
             _context.QuizAnswers.Add(quizAnswer);
             await _context.SaveChangesAsync();
 

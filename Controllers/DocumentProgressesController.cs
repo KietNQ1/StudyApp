@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using myapp.Data;
@@ -11,6 +12,7 @@ namespace myapp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DocumentProgressesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -47,7 +49,7 @@ namespace myapp.Controllers
             return documentProgress;
         }
 
-        // POST: api/DocumentProgresses - Start tracking progress for a document
+        // POST: api/DocumentProgresses
         [HttpPost]
         public async Task<ActionResult<DocumentProgress>> StartDocumentProgress(DocumentProgress documentProgress)
         {
@@ -61,7 +63,6 @@ namespace myapp.Controllers
                 return BadRequest("Invalid Document ID.");
             }
 
-            // Check if progress already exists
             var existingProgress = await _context.DocumentProgresses
                 .FirstOrDefaultAsync(dp => dp.UserId == documentProgress.UserId && dp.DocumentId == documentProgress.DocumentId);
             
@@ -83,7 +84,7 @@ namespace myapp.Controllers
             return CreatedAtAction(nameof(GetDocumentProgress), new { id = documentProgress.Id }, documentProgress);
         }
 
-        // PUT: api/DocumentProgresses/5 - Update reading progress
+        // PUT: api/DocumentProgresses/5
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateDocumentReadingProgress(int id, [FromBody] DocumentReadingProgressUpdateDto updateDto)
         {
